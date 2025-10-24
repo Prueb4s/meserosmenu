@@ -616,7 +616,7 @@ finalizeBtn.addEventListener('click', async () => {
     // Nota: la columna en la tabla se llama "observation" según lo solicitado.
     const orderData = {
         customer_name: name,
-        table_number: table,
+        customer_address: table,
         total_amount: total,
         order_items: items,
         order_status: 'Pendiente',
