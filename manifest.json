@@ -1,0 +1,20 @@
+{
+  "short_name": "DONDE PETER",
+  "name": "Donde Peter Comida Rápida",
+  "icons": [
+    {
+      "src": "img/favicon.png",
+      "type": "image/png",
+      "sizes": "392x392"
+    },
+    {
+      "src": "img/favicon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#fff",
+  "theme_color": "#ff7f00"
+}
