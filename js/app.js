@@ -16,8 +16,8 @@
 
 const { createClient } = supabase;
 
-let SB_URL = null;
-let SB_ANON_KEY = null;
+let SUPA_URL = null;
+let SUPA_ANON_KEY = null;
 let supabaseClient = null;
 
 // --- Variables de estado ---
@@ -64,7 +64,7 @@ const installCloseBtn = document.getElementById('install-close-btn');
 const installPromptBtn = document.getElementById('install-prompt-btn');
 const orderSuccessModal = document.getElementById('orderSuccessModal');
 const orderSuccessTotal = document.getElementById('order-success-total');
-const closeSuccessBtn = document.getElementById('close-success-btn');
+const closeSuccesSUPAtn = document.getElementById('close-success-btn');
 
 // --- Funciones de Ayuda ---
 const money = (v) => {
@@ -375,8 +375,8 @@ function closeModal(modal) {
     });
 });
 
-if (closeSuccessBtn) {
-    closeSuccessBtn.addEventListener('click', () => {
+if (closeSuccesSUPAtn) {
+    closeSuccesSUPAtn.addEventListener('click', () => {
         closeModal(orderSuccessModal);
     });
 }
@@ -698,10 +698,10 @@ const loadConfigAndInitSupabase = async () => {
              throw new Error("El API Route no retornó las claves de DB. Revisa las Variables de Entorno en Vercel.");
         }
 
-        SB_URL = config.url;
-        SB_ANON_KEY = config.anonKey;
+        SUPA_URL = config.url;
+        SUPA_ANON_KEY = config.anonKey;
 
-        supabaseClient = createClient(SB_URL, SB_ANON_KEY);
+        supabaseClient = createClient(SUPA_URL, SUPA_ANON_KEY);
 
         products = await fetchProductsFromSupabase();
         if (products.length > 0) {

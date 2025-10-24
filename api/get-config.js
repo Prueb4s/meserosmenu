@@ -1,18 +1,18 @@
 export default (req, res) => {
   
-  const SB_URL = process.env.SB_URL;
-  const SB_ANON_KEY = process.env.SB_ANON_KEY;
+  const SUPA_URL = process.env.SUPA_URL;
+  const SUPA_ANON_KEY = process.env.SUPA_ANON_KEY;
 
  
   console.log('--- Diagnóstico API Config ---');
-  console.log('URL Cargada:', !!SB_URL); 
-  console.log('ANON_KEY Cargada:', !!SB_ANON_KEY);
+  console.log('URL Cargada:', !!SUPA_URL); 
+  console.log('ANON_KEY Cargada:', !!SUPA_ANON_KEY);
   console.log('------------------------------');
 
-  if (!SB_URL || !SB_ANON_KEY) {
+  if (!SUPA_URL || !SUPA_ANON_KEY) {
     
     return res.status(500).json({ 
-      error: 'Variables de entorno de SB faltantes en la configuración de Vercel.',
+      error: 'Variables de entorno de SUPA faltantes en la configuración de Vercel.',
       url: null,
       anonKey: null
     });
@@ -20,7 +20,7 @@ export default (req, res) => {
 
 
   res.status(200).json({
-    url: SB_URL,
-    anonKey: SB_ANON_KEY
+    url: SUPA_URL,
+    anonKey: SUPA_ANON_KEY
   });
 };
