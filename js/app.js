@@ -80,10 +80,8 @@ const shuffleArray = (array) => {
     return array;
 };
 
-// --- (Nota) El carousel principal fue eliminado del layout. Si el elemento no existe, el bloque no se ejecuta. ---
-// Si en un futuro agregas elementos con id="banner-carousel" se podrá reactivar.
-
 // --- Funciones para renderizar productos ---
+// Ahora la tarjeta incluye un botón directo para añadir al carrito (qty = 1)
 const generateProductCard = (p) => {
     let bestSellerTag = '';
     if (p.bestSeller) {
@@ -97,11 +95,12 @@ const generateProductCard = (p) => {
         stockClass = ' out-of-stock';
     }
 
+    // Botón directo en la tarjeta (data-id)
     return `
       <div class="product-card${stockClass}" data-product-id="${p.id}">
         ${bestSellerTag}
         <div class="image-wrap">
-          <img src="${p.image[0]}" alt="${p.name}" class="product-image modal-trigger" data-id="${p.id}" loading="lazy" />
+          <img src="${p.image[0]}" alt="${p.name}" class="product-image" data-id="${p.id}" loading="lazy" />
           <div class="image-hint" aria-hidden="true">
             <i class="fas fa-hand-point-up" aria-hidden="true"></i>
             <span>Presiona para ver</span>
@@ -115,6 +114,7 @@ const generateProductCard = (p) => {
           </div>
           <div style="margin-top:8px">
             <div class="product-price">$${money(p.price)}</div>
+            <button class="card-add-to-cart add-to-cart-btn" data-id="${p.id}" ${(!p.stock || p.stock <= 0) ? 'disabled' : ''}>Añadir</button>
           </div>
         </div>
       </div>
@@ -340,19 +340,28 @@ categoryCarousel.addEventListener('click', (ev) => {
     });
 })();
 
+// Delegación de eventos principal: captura clicks en botones "Añadir" dentro de las tarjetas
 document.addEventListener('click', (e) => {
-    if (e.target.closest('.modal-trigger')) {
-        const id = e.target.dataset.id;
-        openProductModal(id);
+    // Botón de añadir en la tarjeta
+    const cardBtn = e.target.closest('.card-add-to-cart');
+    if (cardBtn) {
+        const id = cardBtn.dataset.id;
+        // Añadimos 1 unidad por defecto
+        addToCart(id, 1);
+        return;
     }
+
+    // Si el usuario usa el modal (no se abre por defecto según petición), permitir agregar desde modal también
     if (e.target.id === 'modal-add-to-cart-btn') {
         const qty = Math.max(1, parseInt(qtyInput.value) || 1);
-        addToCart(currentProduct.id, qty);
+        if (currentProduct && currentProduct.id) {
+            addToCart(currentProduct.id, qty);
+        }
         closeModal(productModal);
     }
 });
 
-// --- Lógica de Modales ---
+// --- Lógica de Modales (modal ya no se abre por clic en tarjeta) ---
 function showModal(modal) {
     modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
@@ -382,6 +391,7 @@ if (closeSuccesSUPAtn) {
 }
 
 function openProductModal(id) {
+    // Aunque la función sigue disponible, no se llama al hacer clic en la tarjeta.
     const product = products.find(p => p.id === id);
     if (!product) return;
     currentProduct = product;
@@ -603,7 +613,7 @@ finalizeBtn.addEventListener('click', async () => {
 
     const orderData = {
         customer_name: name,
-        customer_address: table,
+        table_number: table,
         total_amount: total,
         order_items: items,
         order_status: 'Pendiente'
@@ -708,7 +718,6 @@ const loadConfigAndInitSupabase = async () => {
             showDefaultSections();
             generateCategoryCarousel();
             enableTouchHints();
-            // mostrar hints iniciales
             setTimeout(() => showImageHints(document), 500);
         }
         updateCart();
