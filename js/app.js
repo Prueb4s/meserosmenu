@@ -603,7 +603,7 @@ finalizeBtn.addEventListener('click', async () => {
 
     const orderData = {
         customer_name: name,
-        table_number: table,
+        customer_address: table,
         total_amount: total,
         order_items: items,
         order_status: 'Pendiente'
