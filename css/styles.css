@@ -288,6 +288,11 @@ body {
   cursor: pointer;
 }
 
+.product-name {
+  color: var(--primary);
+  font-size: 0.98rem;
+}
+
 /* product-info ocupa el espacio restante y permite empujar el contenido inferior hacia abajo */
 .product-info {
   padding: 10px;
