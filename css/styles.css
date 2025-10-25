@@ -269,6 +269,7 @@ body {
 }
 
 /* Product Card */
+/* IMPORTANTE: Convertimos la tarjeta en flex column para forzar que el botón quede al final */
 .product-card {
   background: var(--card-bg);
   border-radius: var(--radius);
@@ -277,6 +278,7 @@ body {
   display: flex;
   flex-direction: column;
   cursor: default;
+  height: 100%; /* asegurar que todas tarjetas tengan la misma referencia de altura */
 }
 
 .product-image {
@@ -286,30 +288,46 @@ body {
   cursor: pointer;
 }
 
+/* product-info ocupa el espacio restante y permite empujar el contenido inferior hacia abajo */
 .product-info {
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.product-name {
-  color: var(--primary);
-  font-size: 0.98rem;
-}
-
-.product-description {
-  font-size: .86rem;
-  color: #666;
   flex: 1;
 }
 
-.product-price {
+/* Contenedor que se mantiene al final de la tarjeta */
+.card-bottom {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Ajustes para que el precio y el botón se vean bien juntos */
+.card-bottom .product-price {
   font-weight: 700;
   color: var(--accent);
   font-size: 1rem;
+  margin: 0;
 }
 
+/* Estilos específicos para el botón dentro de la tarjeta */
+.card-add-to-cart {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  background: var(--secondary);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+/* Modal close button */
 .modal-close {
   position: absolute;
   top: 1px;
@@ -572,7 +590,8 @@ body {
   color: #333;
 }
 
-.form-group input {
+.form-group input,
+.form-group textarea {
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -857,6 +876,7 @@ body {
 }
 
 /* El hint: por defecto oculto, aparece con una animación fundida/pulse */
+/* Se mantiene la definición pero sin elementos en el DOM no se mostrará */
 .image-hint {
   position: absolute;
   left: 50%;

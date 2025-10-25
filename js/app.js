@@ -99,6 +99,7 @@ const generateProductCard = (p) => {
     }
 
     // Botón directo en la tarjeta (data-id). Se eliminó el hint "Presiona para ver".
+    // Se añade el div.card-bottom con margin-top:auto para mantener el botón al final.
     return `
       <div class="product-card${stockClass}" data-product-id="${p.id}">
         ${bestSellerTag}
@@ -111,9 +112,9 @@ const generateProductCard = (p) => {
             <div class="product-name">${p.name}</div>
             <div class="product-description">${p.description}</div>
           </div>
-          <div style="margin-top:8px">
+          <div class="card-bottom">
             <div class="product-price">$${money(p.price)}</div>
-            <button class="card-add-to-cart add-to-cart-btn" data-id="${p.id}" ${(!p.stock || p.stock <= 0) ? 'disabled' : ''}>Añadir</button>
+            <button class="card-add-to-cart" data-id="${p.id}" ${(!p.stock || p.stock <= 0) ? 'disabled' : ''}>Añadir</button>
           </div>
         </div>
       </div>
@@ -613,14 +614,14 @@ finalizeBtn.addEventListener('click', async () => {
     // Tomar observación desde el modal "Tu pedido" (campo agregado)
     const observation = orderObservationInput ? orderObservationInput.value.trim() : '';
 
-    // Nota: la columna en la tabla se llama "observation" según lo solicitado.
+    // Nota: la columna en la tabla se llama "obrservation" según lo solicitado.
     const orderData = {
         customer_name: name,
         customer_address: table,
         total_amount: total,
         order_items: items,
         order_status: 'Pendiente',
-        observation: observation
+        obrservation: observation
     };
 
     try {
