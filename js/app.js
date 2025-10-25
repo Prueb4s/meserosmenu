@@ -614,14 +614,14 @@ finalizeBtn.addEventListener('click', async () => {
     // Tomar observación desde el modal "Tu pedido" (campo agregado)
     const observation = orderObservationInput ? orderObservationInput.value.trim() : '';
 
-    // Nota: la columna en la tabla se llama "obrservation" según lo solicitado.
+    // Nota: la columna en la tabla se llama "observation" según lo solicitado.
     const orderData = {
         customer_name: name,
         customer_address: table,
         total_amount: total,
         order_items: items,
         order_status: 'Pendiente',
-        obrservation: observation
+        observation: observation
     };
 
     try {
