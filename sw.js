@@ -1,4 +1,4 @@
-const CACHE_NAME = 'panorama-cache-v1';
+const CACHE_NAME = 'meseros_peter-cache-v1';
 const urlsToCache = [
     '/',
 ];

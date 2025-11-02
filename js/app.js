@@ -65,7 +65,6 @@ const installPromptBtn = document.getElementById('install-prompt-btn');
 const orderSuccessModal = document.getElementById('orderSuccessModal');
 const orderSuccessTotal = document.getElementById('order-success-total');
 const closeSuccesSUPAtn = document.getElementById('close-success-btn');
-// Nuevo: referencia al textarea de observación dentro del modal 'Tu pedido'
 const orderObservationInput = document.getElementById('order-observation');
 
 // --- Funciones de Ayuda ---
@@ -83,8 +82,6 @@ const shuffleArray = (array) => {
 };
 
 // --- Funciones para renderizar productos ---
-// Ahora la tarjeta incluye un botón directo para añadir al carrito (qty = 1)
-// y se ha eliminado el "image-hint" de "Presiona para ver"
 const generateProductCard = (p) => {
     let bestSellerTag = '';
     if (p.bestSeller) {
@@ -98,8 +95,6 @@ const generateProductCard = (p) => {
         stockClass = ' out-of-stock';
     }
 
-    // Botón directo en la tarjeta (data-id). Se eliminó el hint "Presiona para ver".
-    // Se añade el div.card-bottom con margin-top:auto para mantener el botón al final.
     return `
       <div class="product-card${stockClass}" data-product-id="${p.id}">
         ${bestSellerTag}
@@ -361,7 +356,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// --- Lógica de Modales (modal ya no se abre por clic en tarjeta) ---
+
 function showModal(modal) {
     modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
@@ -405,8 +400,6 @@ function openProductModal(id) {
 }
 
 // --- Anuncios ---
-// En esta versión las imágenes publicitarias fueron removidas del HTML.
-// Si agregas elementos con clase .ad-image, la siguiente lógica los abrirá:
 document.querySelectorAll('.ad-image').forEach(img => {
     img.addEventListener('click', () => {
         const id = img.dataset.productId;
@@ -611,10 +604,10 @@ finalizeBtn.addEventListener('click', async () => {
     const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
     const items = cart.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price }));
 
-    // Tomar observación desde el modal "Tu pedido" (campo agregado)
+    
     const observation = orderObservationInput ? orderObservationInput.value.trim() : '';
 
-    // Nota: la columna en la tabla se llama "observation" según lo solicitado.
+    
     const orderData = {
         customer_name: name,
         customer_address: table,
