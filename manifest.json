@@ -1,6 +1,6 @@
 {
   "short_name": "MESEROS",
-  "name": "Donde Peter Meseros",
+  "name": "Meseros Comida Rápida",
   "icons": [
     {
       "src": "img/favicon.png",
@@ -16,5 +16,5 @@
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#fff",
-  "theme_color": "#ff7f00"
+  "theme_color": "#2769f4"
 }
