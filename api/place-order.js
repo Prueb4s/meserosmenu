@@ -52,7 +52,7 @@ export default async (req, res) => {
         }
     }
 
-    // 2. Guardar el pedido en la tabla 'orders_confirmed'
+    // 2. Guardar el pedido en la tabla 'orders'
     const orderData = {
         customer_name: orderDetails.name,
         customer_address: orderDetails.address,
@@ -62,7 +62,7 @@ export default async (req, res) => {
         order_status: 'Pendiente'
     };
 
-    const { error: orderError } = await supabase.from('orders_confirmed').insert([orderData]);
+    const { error: orderError } = await supabase.from('orders').insert([orderData]);
 
     if (orderError) {
         throw new Error('Error al guardar el pedido: ' + orderError.message);

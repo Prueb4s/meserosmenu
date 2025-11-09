@@ -620,7 +620,7 @@ finalizeBtn.addEventListener('click', async () => {
     try {
         // Guardar la orden en DB (tabla 'orders')
         const { data: inserted, error: orderError } = await supabaseClient
-            .from('orders_confirmed')
+            .from('orders')
             .insert([orderData])
             .select();
 
