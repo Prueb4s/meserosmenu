@@ -16,8 +16,8 @@
 
 const { createClient } = supabase;
 
-let SP_URL = null;
-let SP_ANON_KEY = null;
+let SB_URL = null;
+let SB_ANON_KEY = null;
 let supabaseClient = null;
 
 // --- Variables de estado ---
@@ -710,10 +710,10 @@ const loadConfigAndInitSupabase = async () => {
              throw new Error("El API Route no retornó las claves de DB. Revisa las Variables de Entorno en Vercel.");
         }
 
-        SP_URL = config.url;
-        SP_ANON_KEY = config.anonKey;
+        SB_URL = config.url;
+        SB_ANON_KEY = config.anonKey;
 
-        supabaseClient = createClient(SP_URL, SP_ANON_KEY);
+        supabaseClient = createClient(SB_URL, SB_ANON_KEY);
 
         products = await fetchProductsFromSupabase();
         if (products.length > 0) {

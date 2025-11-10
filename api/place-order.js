@@ -6,8 +6,8 @@ export default async (req, res) => {
   }
 
  
-  const supabaseUrl = process.env.SP_URL;
-  const supabaseServiceRoleKey = process.env.SP_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.SB_URL;
+  const supabaseServiceRoleKey = process.env.SB_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceRoleKey) {
     return res.status(500).json({ error: 'Error de configuración del servidor. Faltan claves.' });
