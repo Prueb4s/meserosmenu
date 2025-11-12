@@ -2,10 +2,10 @@
  * @license
  * Copyright © 2025 Tecnología y Soluciones Informáticas. Todos los derechos reservados.
  *
- * NICOWINGS PWA
+ * DONDE PETER PWA
  *
  * Este software es propiedad confidencial y exclusiva de TECSIN.
- * El permiso de uso de este software es temporal para pruebas en NICOWINGS.
+ * El permiso de uso de este software es temporal para pruebas en Donde Peter.
  *
  * Queda estrictamente prohibida la copia, modificación, distribución,
  * ingeniería inversa o cualquier otro uso no autorizado de este código
@@ -69,11 +69,12 @@ const orderObservationInput = document.getElementById('order-observation');
 
 // --- Funciones de Ayuda ---
 const money = (v) => {
-    const value = Math.floor(v);
+    const value = Math.floor(v || 0);
     return value.toLocaleString('es-CO');
 };
 
 const shuffleArray = (array) => {
+    if (!Array.isArray(array)) return [];
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
@@ -81,9 +82,18 @@ const shuffleArray = (array) => {
     return array;
 };
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 // --- Funciones para renderizar productos ---
-// Ahora la tarjeta muestra un selector de tamaños cuando el producto tiene sizes (JSONB).
-// El select usa value = índice dentro de p.sizes para poder mapear de vuelta al objeto.
+// Ahora la tarjeta permite seleccionar una talla (si existe) y la pasa a addToCart como el índice del array sizes.
 const generateProductCard = (p) => {
     let bestSellerTag = '';
     if (p.bestSeller) {
@@ -105,8 +115,7 @@ const generateProductCard = (p) => {
     // construir HTML del selector de tamaños (si aplica)
     let sizeSelectorHtml = '';
     if (availableSizes.length > 0) {
-        // mostrar precio aproximado (primer tamaño) y un selector
-        const firstPrice = availableSizes[0].price || p.price || 0;
+        // opciones con índice como value
         const options = availableSizes.map((s, idx) => {
             const label = s.name || s.label || (`T${idx+1}`);
             const price = typeof s.price === 'number' ? s.price : (p.price || 0);
@@ -145,17 +154,17 @@ const generateProductCard = (p) => {
     `;
 };
 
-
 // --- Renderizado con paginación ---
 function renderProducts(container, data, page = 1, perPage = 20, withPagination = false) {
+    if (!container) return;
     container.innerHTML = '';
     const paginationContainer = document.getElementById('pagination-container');
     if (!data || data.length === 0) {
-        noProductsMessage.style.display = 'block';
+        if (noProductsMessage) noProductsMessage.style.display = 'block';
         if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
-    noProductsMessage.style.display = 'none';
+    if (noProductsMessage) noProductsMessage.style.display = 'none';
     const totalPages = Math.ceil(data.length / perPage);
     const start = (page - 1) * perPage;
     const end = start + perPage;
@@ -251,6 +260,7 @@ function enableTouchHints() {
 
 function renderPagination(currentPage, totalPages, data, perPage) {
     const paginationContainer = document.getElementById('pagination-container');
+    if (!paginationContainer) return;
     paginationContainer.innerHTML = '';
 
     function createBtn(label, page, active = false) {
@@ -279,6 +289,7 @@ function renderPagination(currentPage, totalPages, data, perPage) {
 }
 
 const generateCategoryCarousel = () => {
+    if (!categoryCarousel) return;
     categoryCarousel.innerHTML = '';
     const categories = Array.from(new Set(products.map(p => p.category))).map(c => ({ label: c }));
     const allItem = document.createElement('div');
@@ -289,48 +300,48 @@ const generateCategoryCarousel = () => {
     categories.forEach(c => {
         const el = document.createElement('div');
         el.className = 'category-item';
-        const fileName = `img/icons/${c.label.toLowerCase().replace(/\s+/g, '_')}.webp`;
+        const fileName = `https://cyjmulwnwmpkosmnjava.supabase.co/menu/icons/${c.label.toLowerCase().replace(/\s+/g, '_')}.webp`;
         el.innerHTML = `<img class="category-image" src="${fileName}" alt="${c.label}" data-category="${c.label}"><span class="category-name">${c.label}</span>`;
         categoryCarousel.appendChild(el);
     });
 };
 
-searchInput.addEventListener('input', (e) => {
+searchInput && searchInput.addEventListener('input', (e) => {
     const q = e.target.value.trim().toLowerCase();
     if (!q) {
         showDefaultSections();
         return;
     }
-    const filtered = products.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
-    filteredSection.style.display = 'block';
-    featuredSection.style.display = 'none';
-    offersSection.style.display = 'none';
-    searchResultsTitle.textContent = `Resultados para "${q}"`;
+    const filtered = products.filter(p => (p.name || '').toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q));
+    if (filteredSection) filteredSection.style.display = 'block';
+    if (featuredSection) featuredSection.style.display = 'none';
+    if (offersSection) offersSection.style.display = 'none';
+    if (searchResultsTitle) searchResultsTitle.textContent = `Resultados para "${q}"`;
     renderProducts(allFilteredContainer, filtered, 1, 20, true);
 });
 
 const showDefaultSections = () => {
-    featuredSection.style.display = 'block';
-    offersSection.style.display = 'none';
-    filteredSection.style.display = 'none';
+    if (featuredSection) featuredSection.style.display = 'block';
+    if (offersSection) offersSection.style.display = 'none';
+    if (filteredSection) filteredSection.style.display = 'none';
     const featured = shuffleArray(products.filter(p => p.featured)).slice(0, 25);
     renderProducts(featuredContainer, featured, 1, 25, false);
 };
 
-categoryCarousel.addEventListener('click', (ev) => {
+categoryCarousel && categoryCarousel.addEventListener('click', (ev) => {
     const img = ev.target.closest('.category-image');
     if (!img) return;
     const cat = img.dataset.category;
-    searchInput.value = '';
+    if (searchInput) searchInput.value = '';
     if (cat === '__all') {
         showDefaultSections();
         return;
     }
-    const filtered = products.filter(p => p.category.toLowerCase() === cat.toLowerCase());
-    filteredSection.style.display = 'block';
-    featuredSection.style.display = 'none';
-    offersSection.style.display = 'none';
-    searchResultsTitle.textContent = cat;
+    const filtered = products.filter(p => (p.category || '').toLowerCase() === cat.toLowerCase());
+    if (filteredSection) filteredSection.style.display = 'block';
+    if (featuredSection) featuredSection.style.display = 'none';
+    if (offersSection) offersSection.style.display = 'none';
+    if (searchResultsTitle) searchResultsTitle.textContent = cat;
     renderProducts(allFilteredContainer, filtered, 1, 20, true);
 });
 
@@ -398,13 +409,34 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// También gestionar cambio de select dentro de la tarjeta para actualizar el precio mostrado in-place
+document.addEventListener('change', (e) => {
+    const sel = e.target.closest && e.target.closest('.card-size-select');
+    if (!sel) return;
+    const card = sel.closest('.product-card');
+    if (!card) return;
+    const productId = sel.dataset.productId;
+    const p = products.find(x => x.id === productId);
+    if (!p) return;
+    const availableSizes = Array.isArray(p.sizes) ? p.sizes : [];
+    const idx = sel.value !== '' ? Number(sel.value) : null;
+    const priceEl = card.querySelector('.product-price');
+    if (idx !== null && typeof availableSizes[idx] !== 'undefined') {
+        const price = Number(availableSizes[idx].price || p.price || 0);
+        if (priceEl) priceEl.textContent = `$${money(price)}`;
+    } else {
+        if (priceEl) priceEl.textContent = `$${money(p.price || 0)}`;
+    }
+});
 
 function showModal(modal) {
+    if (!modal) return;
     modal.style.display = 'flex';
     modal.setAttribute('aria-hidden', 'false');
 }
 
 function closeModal(modal) {
+    if (!modal) return;
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden', 'true');
 }
@@ -428,7 +460,7 @@ if (closeSuccesSUPAtn) {
 }
 
 function openProductModal(id) {
-    // Aunque la función sigue disponible, no se llama al hacer clic en la tarjeta.
+    // Aunque la función sigue disponible, no se llama al hacer clic en la tarjeta por diseño de la PWA de meseros.
     const product = products.find(p => p.id === id);
     if (!product) return;
     currentProduct = product;
@@ -450,6 +482,7 @@ document.querySelectorAll('.ad-image').forEach(img => {
 });
 
 function updateCarousel(images) {
+    if (!carouselImagesContainer) return;
     carouselImagesContainer.innerHTML = '';
     if (!images || images.length === 0) {
         carouselImagesContainer.innerHTML = `<div class="carousel-image" style="display:flex;align-items:center;justify-content:center;background:#f3f3f3">Sin imagen</div>`;
@@ -488,18 +521,19 @@ function updateCarouselPosition() {
 window.addEventListener('resize', updateCarouselPosition);
 
 function updateCart() {
+    if (!cartItemsContainer) return;
     cartItemsContainer.innerHTML = '';
     if (cart.length === 0) {
         cartItemsContainer.innerHTML = '<p class="empty-cart-msg">Tu carrito está vacío.</p>';
-        cartBadge.style.display = 'none';
-        cartBadge.textContent = '0';
-        cartTotalElement.textContent = money(0);
+        if (cartBadge) cartBadge.style.display = 'none';
+        if (cartBadge) cartBadge.textContent = '0';
+        if (cartTotalElement) cartTotalElement.textContent = money(0);
         return;
     }
     let total = 0,
         totalItems = 0;
     cart.forEach((item, idx) => {
-        total += item.price * item.qty;
+        total += (Number(item.price || 0) * Number(item.qty || 0));
         totalItems += item.qty;
         const div = document.createElement('div');
         div.className = 'cart-item';
@@ -518,9 +552,9 @@ function updateCart() {
           </div>`;
         cartItemsContainer.appendChild(div);
     });
-    cartBadge.style.display = 'flex';
-    cartBadge.textContent = String(totalItems);
-    cartTotalElement.textContent = money(total);
+    if (cartBadge) cartBadge.style.display = 'flex';
+    if (cartBadge) cartBadge.textContent = String(totalItems);
+    if (cartTotalElement) cartTotalElement.textContent = money(total);
 }
 
 /**
@@ -559,16 +593,18 @@ function addToCart(id, qty = 1, sizeIndex = null) {
                 price: Number(sizeObj.price || p.price || 0),
                 qty,
                 image: p.image && p.image[0] ? p.image[0] : 'img/favicon.png',
+                // guardamos el objeto size completo (o una versión reducida) para persistir en orders.order_items
                 size: {
                     name: sizeObj.name || sizeObj.label || '',
                     price: Number(sizeObj.price || p.price || 0),
-                    key: sizeObj.key || null
+                    key: sizeObj.key || null,
+                    raw: sizeObj // si necesitas todo el JSON
                 }
             });
         }
     } else {
         // Sin tamaños: usar stock general (campo stock) y precio de producto
-        const availableStock = p.stock || 0;
+        const availableStock = Number(p.stock || 0);
         const existingInCart = cart.find(i => i.id === id && !i.size);
         const currentQtyInCart = existingInCart ? existingInCart.qty : 0;
         if (currentQtyInCart + qty > availableStock) {
@@ -596,17 +632,6 @@ function addToCart(id, qty = 1, sizeIndex = null) {
         name: p.name,
         qty
     });
-}
-
-/* Helper: escapar texto para evitar inyección en el toast */
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
 }
 
 /* Helper: crea y anima el toast (se añade al body y se elimina tras el tiempo especificado) */
@@ -646,7 +671,7 @@ function showAddToCartToast({ image, name, qty = 1 }) {
     }, VISIBLE_MS);
 }
 
-cartItemsContainer.addEventListener('click', (e) => {
+cartItemsContainer && cartItemsContainer.addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-idx]');
     if (!btn) return;
     const idx = parseInt(btn.dataset.idx, 10);
@@ -654,6 +679,8 @@ cartItemsContainer.addEventListener('click', (e) => {
 
     const productInCart = cart[idx];
     const originalProduct = products.find(p => p.id === productInCart.id);
+
+    if (!productInCart || !originalProduct) return;
 
     if (op === 'inc') {
         if (productInCart.size) {
@@ -680,12 +707,12 @@ cartItemsContainer.addEventListener('click', (e) => {
     updateCart();
 });
 
-cartBtn.addEventListener('click', () => {
+cartBtn && cartBtn.addEventListener('click', () => {
     showModal(cartModal);
     updateCart();
 });
 
-checkoutBtn.addEventListener('click', () => {
+checkoutBtn && checkoutBtn.addEventListener('click', () => {
     if (cart.length === 0) {
         alert('El carrito está vacío');
         return;
@@ -693,9 +720,9 @@ checkoutBtn.addEventListener('click', () => {
     showModal(checkoutModal);
 });
 
-finalizeBtn.addEventListener('click', async () => {
-    const name = customerNameInput.value.trim();
-    const table = tableNumberInput.value.trim();
+finalizeBtn && finalizeBtn.addEventListener('click', async () => {
+    const name = customerNameInput ? customerNameInput.value.trim() : '';
+    const table = tableNumberInput ? tableNumberInput.value.trim() : '';
 
     if (!name || !table) {
         alert('Por favor completa nombre y número de mesa');
@@ -707,7 +734,7 @@ finalizeBtn.addEventListener('click', async () => {
         return;
     }
 
-    const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
+    const total = cart.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.qty || 0), 0);
     // Incluir size en los items que la tengan, para guardar en orders.order_items
     const items = cart.map(i => ({
         id: i.id,
@@ -775,18 +802,18 @@ finalizeBtn.addEventListener('click', async () => {
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    installBanner.classList.add('visible');
+    installBanner && installBanner.classList.add('visible');
 });
 
 installPromptBtn && installPromptBtn.addEventListener('click', async () => {
     if (!deferredPrompt) return;
-    installBanner.classList.remove('visible');
+    installBanner && installBanner.classList.remove('visible');
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
     deferredPrompt = null;
 });
 
-installCloseBtn && installCloseBtn.addEventListener('click', () => installBanner.classList.remove('visible'));
+installCloseBtn && installCloseBtn.addEventListener('click', () => installBanner && installBanner.classList.remove('visible'));
 
 // --- Funciones de DB ---
 const fetchProductsFromSupabase = async () => {
@@ -800,7 +827,7 @@ const fetchProductsFromSupabase = async () => {
         if (error) {
             throw error;
         }
-        return data;
+        return data || [];
     } catch (err) {
         console.error('Error al cargar los productos:', err.message || err);
         alert('Hubo un error al cargar los productos. Revisa la consola para más detalles.');
@@ -837,7 +864,7 @@ const loadConfigAndInitSupabase = async () => {
     } catch (error) {
         console.error('Error FATAL al iniciar la aplicación:', error);
         const loadingMessage = document.createElement('div');
-        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;[...]
+        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;padding:20px;z-index:9999';
         loadingMessage.textContent = 'ERROR DE INICIALIZACIÓN: No se pudo cargar la configuración de la tienda. Revisa la consola para más detalles (Faltan variables de entorno en Vercel).';
         document.body.appendChild(loadingMessage);
     }
