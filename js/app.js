@@ -735,13 +735,14 @@ finalizeBtn && finalizeBtn.addEventListener('click', async () => {
     }
 
     const total = cart.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.qty || 0), 0);
-    // Incluir size en los items que la tengan, para guardar en orders.order_items
+    
+    // MODIFICACIÓN: Guardar solo el nombre del tamaño (size) si existe.
     const items = cart.map(i => ({
         id: i.id,
         name: i.name,
         qty: i.qty,
         price: i.price,
-        size: i.size ? { name: i.size.name, price: i.size.price, key: i.size.key } : null
+        size: i.size ? i.size.name : null // Aquí está el cambio
     }));
 
     const observation = orderObservationInput ? orderObservationInput.value.trim() : '';
