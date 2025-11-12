@@ -2,10 +2,10 @@
  * @license
  * Copyright © 2025 Tecnología y Soluciones Informáticas. Todos los derechos reservados.
  *
- * DONDE PETER PWA
+ * NICOWINGS PWA
  *
  * Este software es propiedad confidencial y exclusiva de TECSIN.
- * El permiso de uso de este software es temporal para pruebas en Donde Peter.
+ * El permiso de uso de este software es temporal para pruebas en NICOWINGS.
  *
  * Queda estrictamente prohibida la copia, modificación, distribución,
  * ingeniería inversa o cualquier otro uso no autorizado de este código
@@ -736,12 +736,13 @@ finalizeBtn && finalizeBtn.addEventListener('click', async () => {
 
     const total = cart.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.qty || 0), 0);
     // Incluir size en los items que la tengan, para guardar en orders.order_items
+    // MODIFICACIÓN: guardar solo el nombre de la talla como string, no un objeto.
     const items = cart.map(i => ({
         id: i.id,
         name: i.name,
         qty: i.qty,
         price: i.price,
-        size: i.size ? { name: i.size.name, price: i.size.price, key: i.size.key } : null
+        size: i.size ? i.size.name : null
     }));
 
     const observation = orderObservationInput ? orderObservationInput.value.trim() : '';
@@ -864,7 +865,7 @@ const loadConfigAndInitSupabase = async () => {
     } catch (error) {
         console.error('Error FATAL al iniciar la aplicación:', error);
         const loadingMessage = document.createElement('div');
-        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;padding:20px;z-index:9999';
+        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;[...]
         loadingMessage.textContent = 'ERROR DE INICIALIZACIÓN: No se pudo cargar la configuración de la tienda. Revisa la consola para más detalles (Faltan variables de entorno en Vercel).';
         document.body.appendChild(loadingMessage);
     }
