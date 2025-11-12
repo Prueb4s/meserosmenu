@@ -2,10 +2,10 @@
  * @license
  * Copyright © 2025 Tecnología y Soluciones Informáticas. Todos los derechos reservados.
  *
- * DONDE PETER PWA
+ * NICOWINGS PWA
  *
  * Este software es propiedad confidencial y exclusiva de TECSIN.
- * El permiso de uso de este software es temporal para pruebas en Donde Peter.
+ * El permiso de uso de este software es temporal para pruebas en NICOWINGS.
  *
  * Queda estrictamente prohibida la copia, modificación, distribución,
  * ingeniería inversa o cualquier otro uso no autorizado de este código
@@ -300,7 +300,7 @@ const generateCategoryCarousel = () => {
     categories.forEach(c => {
         const el = document.createElement('div');
         el.className = 'category-item';
-        const fileName = `https://cyjmulwnwmpkosmnjava.supabase.co/menu/icons/${c.label.toLowerCase().replace(/\s+/g, '_')}.webp`;
+        const fileName = `https://cyjmulwnwmpkosmnjava.supabase.co/storage/v1/object/public/menu/icons/${c.label.toLowerCase().replace(/\s+/g, '_')}.webp`;
         el.innerHTML = `<img class="category-image" src="${fileName}" alt="${c.label}" data-category="${c.label}"><span class="category-name">${c.label}</span>`;
         categoryCarousel.appendChild(el);
     });
@@ -541,7 +541,7 @@ function updateCart() {
             <img src="${item.image}" alt="${escapeHtml(item.name)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
             <div>
               <div style="font-weight:700">${escapeHtml(item.name)}</div>
-              ${item.size ? `<div style="font-size:.9rem;color:#666">${escapeHtml(item.size.name)}</div>` : ''}
+              ${item.size ? `<div style="font-size:.9rem;color:#666">${escapeHtml(item.size)}</div>` : ''}
               <div style="font-size:.9rem;color:#333">$${money(item.price)} x ${item.qty}</div>
             </div>
           </div>
@@ -557,10 +557,7 @@ function updateCart() {
     if (cartTotalElement) cartTotalElement.textContent = money(total);
 }
 
-/**
- * addToCart ahora acepta un third param sizeIndex (número) que referencia a p.sizes[index].
- * Si sizeIndex es null y el producto no tiene sizes, se añade normalmente.
- * Si el producto tiene sizes y sizeIndex es proporcionado, se usa ese tamaño (stock y precio por talla).
+
  */
 function addToCart(id, qty = 1, sizeIndex = null) {
     const p = products.find(x => x.id === id);
@@ -576,7 +573,7 @@ function addToCart(id, qty = 1, sizeIndex = null) {
         }
         const sizeObj = availableSizes[sizeIndex];
         const availableStock = Number(sizeObj.stock || 0);
-        const existingInCart = cart.find(i => i.id === id && i.size && String(i.size.name).toLowerCase() === String(sizeObj.name).toLowerCase());
+        const existingInCart = cart.find(i => i.id === id && i.size && String(i.size).toLowerCase() === String(sizeObj.name).toLowerCase());
         const currentQtyInCart = existingInCart ? existingInCart.qty : 0;
 
         if (currentQtyInCart + qty > availableStock) {
@@ -593,13 +590,8 @@ function addToCart(id, qty = 1, sizeIndex = null) {
                 price: Number(sizeObj.price || p.price || 0),
                 qty,
                 image: p.image && p.image[0] ? p.image[0] : 'img/favicon.png',
-                // guardamos el objeto size completo (o una versión reducida) para persistir en orders.order_items
-                size: {
-                    name: sizeObj.name || sizeObj.label || '',
-                    price: Number(sizeObj.price || p.price || 0),
-                    key: sizeObj.key || null,
-                    raw: sizeObj // si necesitas todo el JSON
-                }
+                // GUARDAR SOLO EL NAME (string) para que orders.order_items.size sea una cadena
+                size: sizeObj.name || sizeObj.label || ''
             });
         }
     } else {
@@ -685,11 +677,11 @@ cartItemsContainer && cartItemsContainer.addEventListener('click', (e) => {
     if (op === 'inc') {
         if (productInCart.size) {
             // verificar stock por talla en producto original
-            const sizeName = productInCart.size.name;
+            const sizeName = productInCart.size; // ahora es string
             const sizeObj = Array.isArray(originalProduct.sizes) ? originalProduct.sizes.find(s => String(s.name).toLowerCase() === String(sizeName).toLowerCase()) : null;
             const stockAvailable = sizeObj ? Number(sizeObj.stock || 0) : 0;
             if ((productInCart.qty + 1) > stockAvailable) {
-                alert(`En el momento solo quedan ${stockAvailable} unidades de ese tamaño ${productInCart.size.name}.`);
+                alert(`En el momento solo quedan ${stockAvailable} unidades de ese tamaño ${productInCart.size}.`);
                 return;
             }
         } else {
@@ -735,13 +727,13 @@ finalizeBtn && finalizeBtn.addEventListener('click', async () => {
     }
 
     const total = cart.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.qty || 0), 0);
-    // Incluir size en los items que la tengan, para guardar en orders.order_items
+    // Incluir size como STRING en los items que la tengan, para guardar en orders.order_items
     const items = cart.map(i => ({
         id: i.id,
         name: i.name,
         qty: i.qty,
         price: i.price,
-        size: i.size ? { name: i.size.name, price: i.size.price, key: i.size.key } : null
+        size: i.size ? i.size : null
     }));
 
     const observation = orderObservationInput ? orderObservationInput.value.trim() : '';
