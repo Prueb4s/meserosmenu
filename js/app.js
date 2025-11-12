@@ -2,10 +2,10 @@
  * @license
  * Copyright © 2025 Tecnología y Soluciones Informáticas. Todos los derechos reservados.
  *
- * DONDE PETER PWA
+ * NICOWINGS PWA
  *
  * Este software es propiedad confidencial y exclusiva de TECSIN.
- * El permiso de uso de este software es temporal para pruebas en Donde Peter.
+ * El permiso de uso de este software es temporal para pruebas en NICOWINGS.
  *
  * Queda estrictamente prohibida la copia, modificación, distribución,
  * ingeniería inversa o cualquier otro uso no autorizado de este código
@@ -82,6 +82,8 @@ const shuffleArray = (array) => {
 };
 
 // --- Funciones para renderizar productos ---
+// Ahora la tarjeta muestra un selector de tamaños cuando el producto tiene sizes (JSONB).
+// El select usa value = índice dentro de p.sizes para poder mapear de vuelta al objeto.
 const generateProductCard = (p) => {
     let bestSellerTag = '';
     if (p.bestSeller) {
@@ -90,26 +92,53 @@ const generateProductCard = (p) => {
 
     let stockOverlay = '';
     let stockClass = '';
-    if (!p.stock || p.stock <= 0) {
+
+    // determinar stock total: si tiene sizes sumar stock por talla, si no usar p.stock
+    const availableSizes = Array.isArray(p.sizes) ? p.sizes : [];
+    const totalStock = availableSizes.length > 0 ? availableSizes.reduce((acc, s) => acc + Number(s.stock || 0), 0) : (p.stock || 0);
+
+    if (totalStock <= 0) {
         stockOverlay = `<div class="out-of-stock-overlay">Agotado</div>`;
         stockClass = ' out-of-stock';
+    }
+
+    // construir HTML del selector de tamaños (si aplica)
+    let sizeSelectorHtml = '';
+    if (availableSizes.length > 0) {
+        // mostrar precio aproximado (primer tamaño) y un selector
+        const firstPrice = availableSizes[0].price || p.price || 0;
+        const options = availableSizes.map((s, idx) => {
+            const label = s.name || s.label || (`T${idx+1}`);
+            const price = typeof s.price === 'number' ? s.price : (p.price || 0);
+            const stockInfo = (typeof s.stock !== 'undefined') ? ` (${s.stock})` : '';
+            return `<option value="${idx}">${escapeHtml(label)} — $${money(price)}${stockInfo}</option>`;
+        }).join('');
+        sizeSelectorHtml = `
+          <div class="size-select-wrapper">
+            <select class="card-size-select" aria-label="Seleccionar tamaño" data-product-id="${p.id}">
+              <option value="">Seleccionar tamaño</option>
+              ${options}
+            </select>
+          </div>
+        `;
     }
 
     return `
       <div class="product-card${stockClass}" data-product-id="${p.id}">
         ${bestSellerTag}
         <div class="image-wrap">
-          <img src="${p.image[0]}" alt="${p.name}" class="product-image" data-id="${p.id}" loading="lazy" />
+          <img src="${p.image && p.image[0] ? p.image[0] : 'img/favicon.png'}" alt="${escapeHtml(p.name)}" class="product-image" data-id="${p.id}" loading="lazy" />
         </div>
         ${stockOverlay}
         <div class="product-info">
           <div>
-            <div class="product-name">${p.name}</div>
-            <div class="product-description">${p.description}</div>
+            <div class="product-name">${escapeHtml(p.name)}</div>
+            <div class="product-description">${escapeHtml(p.description || '')}</div>
+            ${sizeSelectorHtml}
           </div>
           <div class="card-bottom">
             <div class="product-price">$${money(p.price)}</div>
-            <button class="card-add-to-cart" data-id="${p.id}" ${(!p.stock || p.stock <= 0) ? 'disabled' : ''}>Añadir</button>
+            <button class="card-add-to-cart" data-id="${p.id}" ${totalStock <= 0 ? 'disabled' : ''}>Añadir</button>
           </div>
         </div>
       </div>
@@ -341,8 +370,20 @@ document.addEventListener('click', (e) => {
     const cardBtn = e.target.closest('.card-add-to-cart');
     if (cardBtn) {
         const id = cardBtn.dataset.id;
-        // Añadimos 1 unidad por defecto
-        addToCart(id, 1);
+        const cardEl = cardBtn.closest('.product-card');
+        // Intentar leer selector de tamaño dentro de la tarjeta (si existe)
+        const select = cardEl ? cardEl.querySelector('.card-size-select') : null;
+        let chosenSizeIndex = null;
+        if (select) {
+            // Si existe selector y no se eligió nada, pedimos selección
+            if (!select.value) {
+                alert('Selecciona un tamaño antes de añadir al carrito.');
+                return;
+            }
+            chosenSizeIndex = Number(select.value);
+        }
+        // Añadimos 1 unidad por defecto, pasando el índice de tamaño si aplica
+        addToCart(id, 1, chosenSizeIndex);
         return;
     }
 
@@ -350,7 +391,8 @@ document.addEventListener('click', (e) => {
     if (e.target.id === 'modal-add-to-cart-btn') {
         const qty = Math.max(1, parseInt(qtyInput.value) || 1);
         if (currentProduct && currentProduct.id) {
-            addToCart(currentProduct.id, qty);
+            // En modal no tenemos selector de talla por defecto en esta PWA, así que simplemente agregar producto sin talla
+            addToCart(currentProduct.id, qty, null);
         }
         closeModal(productModal);
     }
@@ -461,7 +503,19 @@ function updateCart() {
         totalItems += item.qty;
         const div = document.createElement('div');
         div.className = 'cart-item';
-        div.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><img src="${item.image}" alt="${item.name}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;"><div><strong>${item.name}</strong><div style="font-size:0.9rem;color:#666">$${money(item.price)} x ${item.qty}</div></div></div><div class="controls"><button class="qty-btn" data-idx="${idx}" data-op="dec">-</button><button class="qty-btn" data-idx="${idx}" data-op="inc">+</button></div>`;
+        div.innerHTML = `<div style="display:flex;align-items:center;gap:8px;">
+            <img src="${item.image}" alt="${escapeHtml(item.name)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
+            <div>
+              <div style="font-weight:700">${escapeHtml(item.name)}</div>
+              ${item.size ? `<div style="font-size:.9rem;color:#666">${escapeHtml(item.size.name)}</div>` : ''}
+              <div style="font-size:.9rem;color:#333">$${money(item.price)} x ${item.qty}</div>
+            </div>
+          </div>
+          <div class="controls">
+            <button class="qty-btn" data-idx="${idx}" data-op="dec">-</button>
+            <span style="min-width:28px;text-align:center;display:inline-block">${item.qty}</span>
+            <button class="qty-btn" data-idx="${idx}" data-op="inc">+</button>
+          </div>`;
         cartItemsContainer.appendChild(div);
     });
     cartBadge.style.display = 'flex';
@@ -469,29 +523,70 @@ function updateCart() {
     cartTotalElement.textContent = money(total);
 }
 
-function addToCart(id, qty = 1) {
+/**
+ * addToCart ahora acepta un third param sizeIndex (número) que referencia a p.sizes[index].
+ * Si sizeIndex es null y el producto no tiene sizes, se añade normalmente.
+ * Si el producto tiene sizes y sizeIndex es proporcionado, se usa ese tamaño (stock y precio por talla).
+ */
+function addToCart(id, qty = 1, sizeIndex = null) {
     const p = products.find(x => x.id === id);
     if (!p) return;
 
-    const availableStock = p.stock || 0;
-    const existingInCart = cart.find(i => i.id === id);
-    const currentQtyInCart = existingInCart ? existingInCart.qty : 0;
+    const availableSizes = Array.isArray(p.sizes) ? p.sizes : [];
 
-    if (currentQtyInCart + qty > availableStock) {
-        alert(`En el momento solo quedan ${availableStock} unidades.`);
-        return;
-    }
+    if (availableSizes.length > 0) {
+        // producto con tallas: sizeIndex es obligatorio (lo validamos en el botón)
+        if (sizeIndex === null || typeof availableSizes[sizeIndex] === 'undefined') {
+            alert('Selecciona un tamaño válido antes de agregar al carrito.');
+            return;
+        }
+        const sizeObj = availableSizes[sizeIndex];
+        const availableStock = Number(sizeObj.stock || 0);
+        const existingInCart = cart.find(i => i.id === id && i.size && String(i.size.name).toLowerCase() === String(sizeObj.name).toLowerCase());
+        const currentQtyInCart = existingInCart ? existingInCart.qty : 0;
 
-    if (existingInCart) {
-        existingInCart.qty += qty;
+        if (currentQtyInCart + qty > availableStock) {
+            alert(`En el momento solo quedan ${availableStock} unidades del tamaño ${sizeObj.name}.`);
+            return;
+        }
+
+        if (existingInCart) {
+            existingInCart.qty += qty;
+        } else {
+            cart.push({
+                id: p.id,
+                name: p.name,
+                price: Number(sizeObj.price || p.price || 0),
+                qty,
+                image: p.image && p.image[0] ? p.image[0] : 'img/favicon.png',
+                size: {
+                    name: sizeObj.name || sizeObj.label || '',
+                    price: Number(sizeObj.price || p.price || 0),
+                    key: sizeObj.key || null
+                }
+            });
+        }
     } else {
-        cart.push({
-            id: p.id,
-            name: p.name,
-            price: p.price,
-            qty,
-            image: p.image[0]
-        });
+        // Sin tamaños: usar stock general (campo stock) y precio de producto
+        const availableStock = p.stock || 0;
+        const existingInCart = cart.find(i => i.id === id && !i.size);
+        const currentQtyInCart = existingInCart ? existingInCart.qty : 0;
+        if (currentQtyInCart + qty > availableStock) {
+            alert(`En el momento solo quedan ${availableStock} unidades.`);
+            return;
+        }
+        if (existingInCart) {
+            existingInCart.qty += qty;
+        } else {
+            cart.push({
+                id: p.id,
+                name: p.name,
+                price: Number(p.price || 0),
+                qty,
+                image: p.image && p.image[0] ? p.image[0] : 'img/favicon.png',
+                size: null
+            });
+        }
     }
 
     updateCart();
@@ -561,9 +656,20 @@ cartItemsContainer.addEventListener('click', (e) => {
     const originalProduct = products.find(p => p.id === productInCart.id);
 
     if (op === 'inc') {
-        if ((productInCart.qty + 1) > (originalProduct.stock || 0)) {
-            alert(`En el momento solo quedan ${originalProduct.stock} unidades.`);
-            return;
+        if (productInCart.size) {
+            // verificar stock por talla en producto original
+            const sizeName = productInCart.size.name;
+            const sizeObj = Array.isArray(originalProduct.sizes) ? originalProduct.sizes.find(s => String(s.name).toLowerCase() === String(sizeName).toLowerCase()) : null;
+            const stockAvailable = sizeObj ? Number(sizeObj.stock || 0) : 0;
+            if ((productInCart.qty + 1) > stockAvailable) {
+                alert(`En el momento solo quedan ${stockAvailable} unidades de ese tamaño ${productInCart.size.name}.`);
+                return;
+            }
+        } else {
+            if ((productInCart.qty + 1) > (originalProduct.stock || 0)) {
+                alert(`En el momento solo quedan ${originalProduct.stock} unidades.`);
+                return;
+            }
         }
         productInCart.qty++;
     }
@@ -602,12 +708,17 @@ finalizeBtn.addEventListener('click', async () => {
     }
 
     const total = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
-    const items = cart.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price }));
+    // Incluir size en los items que la tengan, para guardar en orders.order_items
+    const items = cart.map(i => ({
+        id: i.id,
+        name: i.name,
+        qty: i.qty,
+        price: i.price,
+        size: i.size ? { name: i.size.name, price: i.size.price, key: i.size.key } : null
+    }));
 
-    
     const observation = orderObservationInput ? orderObservationInput.value.trim() : '';
 
-    
     const orderData = {
         customer_name: name,
         customer_address: table,
@@ -726,7 +837,7 @@ const loadConfigAndInitSupabase = async () => {
     } catch (error) {
         console.error('Error FATAL al iniciar la aplicación:', error);
         const loadingMessage = document.createElement('div');
-        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;padding:20px';
+        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;[...]
         loadingMessage.textContent = 'ERROR DE INICIALIZACIÓN: No se pudo cargar la configuración de la tienda. Revisa la consola para más detalles (Faltan variables de entorno en Vercel).';
         document.body.appendChild(loadingMessage);
     }
