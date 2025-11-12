@@ -2,10 +2,10 @@
  * @license
  * Copyright © 2025 Tecnología y Soluciones Informáticas. Todos los derechos reservados.
  *
- * NICOWINGS PWA
+ * DONDE PETER PWA
  *
  * Este software es propiedad confidencial y exclusiva de TECSIN.
- * El permiso de uso de este software es temporal para pruebas en NICOWINGS.
+ * El permiso de uso de este software es temporal para pruebas en Donde Peter.
  *
  * Queda estrictamente prohibida la copia, modificación, distribución,
  * ingeniería inversa o cualquier otro uso no autorizado de este código
