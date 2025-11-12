@@ -300,7 +300,7 @@ const generateCategoryCarousel = () => {
     categories.forEach(c => {
         const el = document.createElement('div');
         el.className = 'category-item';
-        const fileName = `https://cyjmulwnwmpkosmnjava.supabase.co/menu/icons/${c.label.toLowerCase().replace(/\s+/g, '_')}.webp`;
+        const fileName = `img/icons/${c.label.toLowerCase().replace(/\s+/g, '_')}.webp`;
         el.innerHTML = `<img class="category-image" src="${fileName}" alt="${c.label}" data-category="${c.label}"><span class="category-name">${c.label}</span>`;
         categoryCarousel.appendChild(el);
     });
@@ -535,17 +535,13 @@ function updateCart() {
     cart.forEach((item, idx) => {
         total += (Number(item.price || 0) * Number(item.qty || 0));
         totalItems += item.qty;
-        // Soportar size como objeto o string
-        const displaySize = item.size ? (typeof item.size === 'string' ? item.size : (item.size.name || '')) : '';
-        const sizeHtml = displaySize ? `<div style="font-size:.9rem;color:#666">${escapeHtml(displaySize)}</div>` : '';
-
         const div = document.createElement('div');
         div.className = 'cart-item';
         div.innerHTML = `<div style="display:flex;align-items:center;gap:8px;">
             <img src="${item.image}" alt="${escapeHtml(item.name)}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
             <div>
               <div style="font-weight:700">${escapeHtml(item.name)}</div>
-              ${sizeHtml}
+              ${item.size ? `<div style="font-size:.9rem;color:#666">${escapeHtml(item.size.name)}</div>` : ''}
               <div style="font-size:.9rem;color:#333">$${money(item.price)} x ${item.qty}</div>
             </div>
           </div>
@@ -580,12 +576,7 @@ function addToCart(id, qty = 1, sizeIndex = null) {
         }
         const sizeObj = availableSizes[sizeIndex];
         const availableStock = Number(sizeObj.stock || 0);
-        // comparar tolerando size como string u objeto
-        const existingInCart = cart.find(i => {
-            if (!i.size) return false;
-            const nameA = typeof i.size === 'string' ? i.size : (i.size.name || '');
-            return i.id === id && String(nameA).toLowerCase() === String(sizeObj.name).toLowerCase();
-        });
+        const existingInCart = cart.find(i => i.id === id && i.size && String(i.size.name).toLowerCase() === String(sizeObj.name).toLowerCase());
         const currentQtyInCart = existingInCart ? existingInCart.qty : 0;
 
         if (currentQtyInCart + qty > availableStock) {
@@ -693,12 +684,12 @@ cartItemsContainer && cartItemsContainer.addEventListener('click', (e) => {
 
     if (op === 'inc') {
         if (productInCart.size) {
-            // soportar size como string o como objeto
-            const sizeName = typeof productInCart.size === 'string' ? productInCart.size : (productInCart.size && productInCart.size.name);
+            // verificar stock por talla en producto original
+            const sizeName = productInCart.size.name;
             const sizeObj = Array.isArray(originalProduct.sizes) ? originalProduct.sizes.find(s => String(s.name).toLowerCase() === String(sizeName).toLowerCase()) : null;
             const stockAvailable = sizeObj ? Number(sizeObj.stock || 0) : 0;
             if ((productInCart.qty + 1) > stockAvailable) {
-                alert(`En el momento solo quedan ${stockAvailable} unidades de ese tamaño ${sizeName}.`);
+                alert(`En el momento solo quedan ${stockAvailable} unidades de ese tamaño ${productInCart.size.name}.`);
                 return;
             }
         } else {
@@ -745,13 +736,12 @@ finalizeBtn && finalizeBtn.addEventListener('click', async () => {
 
     const total = cart.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.qty || 0), 0);
     // Incluir size en los items que la tengan, para guardar en orders.order_items
-    // Cambiado: guardar solo el nombre de la talla como string (size: '12 Piezas') o null si no aplica.
     const items = cart.map(i => ({
         id: i.id,
         name: i.name,
         qty: i.qty,
         price: i.price,
-        size: i.size ? (typeof i.size === 'string' ? i.size : i.size.name) : null
+        size: i.size ? { name: i.size.name, price: i.size.price, key: i.size.key } : null
     }));
 
     const observation = orderObservationInput ? orderObservationInput.value.trim() : '';
@@ -874,7 +864,7 @@ const loadConfigAndInitSupabase = async () => {
     } catch (error) {
         console.error('Error FATAL al iniciar la aplicación:', error);
         const loadingMessage = document.createElement('div');
-        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;[...]
+        loadingMessage.style = 'position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;color:red;font-weight:bold;text-align:center;padding:20px;z-index:9999';
         loadingMessage.textContent = 'ERROR DE INICIALIZACIÓN: No se pudo cargar la configuración de la tienda. Revisa la consola para más detalles (Faltan variables de entorno en Vercel).';
         document.body.appendChild(loadingMessage);
     }
