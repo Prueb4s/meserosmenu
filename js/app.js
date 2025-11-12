@@ -300,7 +300,7 @@ const generateCategoryCarousel = () => {
     categories.forEach(c => {
         const el = document.createElement('div');
         el.className = 'category-item';
-        const fileName = `img/icons/${c.label.toLowerCase().replace(/\s+/g, '_')}.webp`;
+        const fileName = `https://cyjmulwnwmpkosmnjava.supabase.co/menu/icons/${c.label.toLowerCase().replace(/\s+/g, '_')}.webp`;
         el.innerHTML = `<img class="category-image" src="${fileName}" alt="${c.label}" data-category="${c.label}"><span class="category-name">${c.label}</span>`;
         categoryCarousel.appendChild(el);
     });
@@ -398,7 +398,7 @@ document.addEventListener('click', (e) => {
         return;
     }
 
-    // Si el usuario usa el modal (no se abre por defecto según petición), permitir agregar desde modal también
+    
     if (e.target.id === 'modal-add-to-cart-btn') {
         const qty = Math.max(1, parseInt(qtyInput.value) || 1);
         if (currentProduct && currentProduct.id) {
