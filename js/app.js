@@ -124,8 +124,8 @@ const generateProductCard = (p) => {
         }).join('');
         sizeSelectorHtml = `
           <div class="size-select-wrapper">
-            <select class="card-size-select" aria-label="Seleccionar tamaño" data-product-id="${p.id}">
-              <option value="">Seleccionar tamaño</option>
+            <select class="card-size-select" aria-label="Selecciona" data-product-id="${p.id}">
+              <option value="">Selecciona</option>
               ${options}
             </select>
           </div>
@@ -387,7 +387,7 @@ document.addEventListener('click', (e) => {
         if (select) {
             // Si existe selector y no se eligió nada, pedimos selección
             if (!select.value) {
-                alert('Selecciona un tamaño antes de añadir al carrito.');
+                alert('Selecciona antes de añadir al carrito.');
                 return;
             }
             chosenSizeIndex = Number(select.value);
@@ -556,11 +556,7 @@ function updateCart() {
     if (cartTotalElement) cartTotalElement.textContent = money(total);
 }
 
-/**
- * addToCart ahora acepta un third param sizeIndex (número) que referencia a p.sizes[index].
- * Si sizeIndex es null y el producto no tiene sizes, se añade normalmente.
- * Si el producto tiene sizes y sizeIndex es proporcionado, se usa ese tamaño (stock y precio por talla).
- */
+
 function addToCart(id, qty = 1, sizeIndex = null) {
     const p = products.find(x => x.id === id);
     if (!p) return;
@@ -570,7 +566,7 @@ function addToCart(id, qty = 1, sizeIndex = null) {
     if (availableSizes.length > 0) {
         // producto con tallas: sizeIndex es obligatorio (lo validamos en el botón)
         if (sizeIndex === null || typeof availableSizes[sizeIndex] === 'undefined') {
-            alert('Selecciona un tamaño válido antes de agregar al carrito.');
+            alert('Selecciona antes de agregar al carrito.');
             return;
         }
         const sizeObj = availableSizes[sizeIndex];
@@ -579,7 +575,7 @@ function addToCart(id, qty = 1, sizeIndex = null) {
         const currentQtyInCart = existingInCart ? existingInCart.qty : 0;
 
         if (currentQtyInCart + qty > availableStock) {
-            alert(`En el momento solo quedan ${availableStock} unidades del tamaño ${sizeObj.name}.`);
+            alert(`En el momento solo quedan ${availableStock} unidades ${sizeObj.name}.`);
             return;
         }
 
@@ -688,7 +684,7 @@ cartItemsContainer && cartItemsContainer.addEventListener('click', (e) => {
             const sizeObj = Array.isArray(originalProduct.sizes) ? originalProduct.sizes.find(s => String(s.name).toLowerCase() === String(sizeName).toLowerCase()) : null;
             const stockAvailable = sizeObj ? Number(sizeObj.stock || 0) : 0;
             if ((productInCart.qty + 1) > stockAvailable) {
-                alert(`En el momento solo quedan ${stockAvailable} unidades de ese tamaño ${productInCart.size.name}.`);
+                alert(`En el momento solo quedan ${stockAvailable} unidades ${productInCart.size.name}.`);
                 return;
             }
         } else {
@@ -735,7 +731,7 @@ finalizeBtn && finalizeBtn.addEventListener('click', async () => {
 
     const total = cart.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.qty || 0), 0);
     
-    // MODIFICACIÓN: Guardar solo el nombre del tamaño (size) si existe.
+    
     const items = cart.map(i => ({
         id: i.id,
         name: i.name,
